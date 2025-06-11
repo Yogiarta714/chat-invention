@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INVENTION - WhatsApp Excel Sender</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3a 25%, #2d1b69 50%, #ffd700 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 215, 0, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(45, 27, 105, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(15, 15, 35, 0.95);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 215, 0, 0.2),
+                inset 0 1px 0 rgba(255, 215, 0, 0.1);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            position: relative;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ffd700, #2d1b69, #ffd700);
+            border-radius: 27px;
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            font-weight: 900;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #ffd700 0%, #ffffff 25%, #ffd700 50%, #ffed4a 75%, #ffd700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            letter-spacing: 3px;
+            position: relative;
+        }
+
+        .header h1::before {
+            content: '⚡';
+            position: absolute;
+            left: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            color: #ffd700;
+            animation: pulse 2s infinite;
+        }
+
+        .header h1::after {
+            content: '⚡';
+            position: absolute;
+            right: -60px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            color: #ffd700;
+            animation: pulse 2s infinite 1s;
+        }
+
+        .header p {
+            color: #a0a0ff;
+            font-size: 1.3em;
+            font-weight: 500;
+            text-shadow: 0 2px 10px rgba(160, 160, 255, 0.3);
+        }
+
+        .step {
+            margin-bottom: 35px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(45, 27, 105, 0.3) 0%, rgba(15, 15, 35, 0.8) 100%);
+            border-radius: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 215, 0, 0.1);
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ffd700, transparent);
+            transition: left 0.6s ease;
+        }
+
+        .step:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 215, 0, 0.4);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(255, 215, 0, 0.2);
+        }
+
+        .step:hover::before {
+            left: 100%;
+        }
+
+        .step-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .step-number {
+            background: linear-gradient(45deg, #ffd700, #ffed4a);
+            color: #0f0f23;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            font-weight: 900;
+            font-size: 1.2em;
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            background: linear-gradient(45deg, #ffd700 0%, #ffed4a 50%, #ffd700 100%);
+            color: #0f0f23;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.1em;
+            transition: all 0.4s ease;
+            border: none;
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .file-input-wrapper:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 15px 35px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(45deg, #ffed4a 0%, #ffd700 50%, #ffed4a 100%);
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .data-table {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 15px;
+            margin-top: 20px;
+            background: rgba(15, 15, 35, 0.5);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+            color: #ffffff;
+        }
+
+        th {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(45, 27, 105, 0.3));
+            font-weight: bold;
+            color: #ffd700;
+            position: sticky;
+            top: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+        }
+
+        tr:hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .checkbox-cell {
+            text-align: center;
+            width: 60px;
+        }
+
+        .checkbox-cell input[type="checkbox"] {
+            transform: scale(1.3);
+            accent-color: #ffd700;
+        }
+
+        .template-area {
+            width: 100%;
+            min-height: 180px;
+            padding: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 15px;
+            font-family: inherit;
+            font-size: 1em;
+            resize: vertical;
+            transition: all 0.4s ease;
+            background: rgba(15, 15, 35, 0.8);
+            color: #ffffff;
+        }
+
+        .template-area:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+            background: rgba(15, 15, 35, 0.9);
+        }
+
+        .variables {
+            background: linear-gradient(135deg, rgba(45, 27, 105, 0.2), rgba(15, 15, 35, 0.5));
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            color: #ffd700;
+        }
+
+        .variable-tag {
+            display: inline-block;
+            background: linear-gradient(45deg, #ffd700, #ffed4a);
+            color: #0f0f23;
+            padding: 8px 15px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 3px 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .variable-tag:hover {
+            background: linear-gradient(45deg, #ffed4a, #ffd700);
+            transform: translateY(-2px) scale(1.1);
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .send-options {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .send-button {
+            background: linear-gradient(45deg, #ffd700 0%, #ffed4a 25%, #ffd700 50%, #ffed4a 75%, #ffd700 100%);
+            color: #0f0f23;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .send-button.secondary {
+            background: linear-gradient(45deg, #2d1b69, #4a2c85);
+            color: #ffd700;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .send-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .send-button:hover::before {
+            left: 100%;
+        }
+
+        .send-button:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 20px 50px rgba(255, 215, 0, 0.6);
+        }
+
+        .send-button:disabled {
+            background: linear-gradient(45deg, #666, #888);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            color: #ccc;
+        }
+
+        .status {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 15px;
+            font-weight: bold;
+            border: 2px solid;
+        }
+
+        .status.success {
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.1), rgba(0, 200, 0, 0.2));
+            color: #00ff88;
+            border-color: rgba(0, 255, 136, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .status.error {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(200, 0, 0, 0.2));
+            color: #ff6b6b;
+            border-color: rgba(255, 107, 107, 0.3);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.2);
+        }
+
+        .status.warning {
+            background: linear-gradient(135deg, rgba(255, 165, 0, 0.1), rgba(255, 140, 0, 0.2));
+            color: #ffb366;
+            border-color: rgba(255, 179, 102, 0.3);
+            box-shadow: 0 0 20px rgba(255, 179, 102, 0.2);
+        }
+
+        .select-all {
+            margin: 20px 0;
+        }
+
+        .select-all button {
+            background: linear-gradient(45deg, #2d1b69, #4a2c85);
+            color: #ffd700;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 15px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .select-all button:hover {
+            background: linear-gradient(45deg, #4a2c85, #2d1b69);
+            border-color: rgba(255, 215, 0, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(45, 27, 105, 0.4);
+        }
+
+        .preview {
+            background: linear-gradient(135deg, rgba(15, 15, 35, 0.8), rgba(45, 27, 105, 0.3));
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            color: #fff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .contact-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 15px;
+            background: rgba(15, 15, 35, 0.5);
+            margin-top: 20px;
+        }
+
+        .contact-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #fff;
+            transition: background 0.3s ease;
+        }
+
+        .contact-item:hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-name {
+            font-weight: bold;
+            color: #ffd700;
+            margin-bottom: 5px;
+        }
+
+        .contact-phone {
+            color: #a0a0ff;
+            font-size: 0.9em;
+        }
+
+        .send-individual {
+            background: linear-gradient(45deg, #00ff88, #00cc6a);
+            color: #0f0f23;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .send-individual:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+        }
+
+        .send-individual:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        .file-info {
+            margin-top: 15px;
+            color: #a0a0ff;
+            font-weight: 500;
+        }
+
+        .selected-count {
+            margin-left: 20px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 2px 5px rgba(255, 215, 0, 0.3);
+        }
+
+        .mode-selector {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(45, 27, 105, 0.2), rgba(15, 15, 35, 0.5));
+            border-radius: 15px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .mode-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+
+        .mode-option input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.3);
+            accent-color: #ffd700;
+        }
+
+        .mode-option label {
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .mode-description {
+            margin-left: 35px;
+            color: #a0a0ff;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(45, 27, 105, 0.5);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffed4a);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>INVENTION</h1>
+            <p>WhatsApp Excel Sender - Informatics Festival 2025</p>
+        </div>
+
+        <!-- Step 1: Upload Excel -->
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">1</span>
+                Upload File Excel
+            </div>
+            <label for="excelFile" class="file-input-wrapper">
+                <input type="file" id="excelFile" accept=".xlsx,.xls" />
+                📊 Pilih File Excel
+            </label>
+            <div id="fileInfo" class="file-info"></div>
+            
+            <div id="dataContainer" style="display: none;">
+                <div class="select-all">
+                    <button onclick="selectAll()">Pilih Semua</button>
+                    <button onclick="unselectAll()">Hapus Semua</button>
+                    <span id="selectedCount" class="selected-count"></span>
+                </div>
+                <div class="data-table">
+                    <table id="dataTable">
+                        <thead id="tableHeader"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Template Pesan -->
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">2</span>
+                Template Pesan WhatsApp
+            </div>
+            <textarea id="messageTemplate" class="template-area" placeholder="Ketik template pesan Anda di sini...
+
+Contoh:
+Halo {nama},
+Selamat! Anda telah terdaftar di INVENTION 2025.
+Nomor peserta: {nomor_peserta}
+
+Salam,
+Tim INVENTION"></textarea>
+            
+            <div class="variables">
+                <strong>🏷️ Variabel Tersedia:</strong>
+                <div id="availableVariables"></div>
+            </div>
+            
+            <div class="preview">
+                <strong>👀 Preview Pesan:</strong>
+                <div id="messagePreview">Template akan muncul di sini...</div>
+            </div>
+        </div>
+
+        <!-- Step 3: Kirim Pesan -->
+        <div class="step">
+            <div class="step-title">
+                <span class="step-number">3</span>
+                Kirim Pesan WhatsApp
+            </div>
+            
+            <div class="mode-selector">
+                <strong style="color: #ffd700; display: block; margin-bottom: 15px;">📤 Pilih Mode Pengiriman:</strong>
+                
+                <div class="mode-option">
+                    <input type="radio" id="modeInstant" name="sendMode" value="instant" checked>
+                    <label for="modeInstant">Mode Instant (Buka Semua Tab Sekaligus)</label>
+                </div>
+                <div class="mode-description">
+                    ⚡ Membuka semua tab WhatsApp langsung. Cocok untuk jumlah sedikit (1-10 kontak).
+                </div>
+                
+                <div class="mode-option">
+                    <input type="radio" id="modeManual" name="sendMode" value="manual">
+                    <label for="modeManual">Mode Manual (Satu Per Satu)</label>
+                </div>
+                <div class="mode-description">
+                    👆 Klik tombol untuk setiap kontak. Lebih aman untuk browser dan jumlah banyak.
+                </div>
+            </div>
+
+            <div class="send-options">
+                <button id="sendMessages" class="send-button" disabled>
+                    🚀 Mulai Pengiriman
+                </button>
+                <button id="openAllTabs" class="send-button secondary" disabled style="display: none;">
+                    📱 Buka Semua Tab (Force)
+                </button>
+            </div>
+
+            <div id="progressContainer" style="display: none;">
+                <div class="progress-bar">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <div id="progressText" style="color: #ffd700; text-align: center; margin-top: 10px;"></div>
+            </div>
+
+            <div id="sendStatus"></div>
+            
+            <div id="contactListContainer" style="display: none;">
+                <h3 style="color: #ffd700; margin: 20px 0 10px 0;">📋 Daftar Kontak Terpilih:</h3>
+                <div id="contactList" class="contact-list"></div>
+            </div>
+        </div>
+    </div>
+
+ <script>
+let excelData = [];
+let selectedRows = [];
+let headers = [];
+let isProcessing = false;
+let currentContactIndex = 0;
+let processedContacts = [];
+
+document.getElementById('excelFile').addEventListener('change', handleFile);
+document.getElementById('messageTemplate').addEventListener('input', updatePreview);
+
+// Mode selector event listeners
+document.querySelectorAll('input[name="sendMode"]').forEach(radio => {
+    radio.addEventListener('change', updateSendMode);
+});
+
+function updateSendMode() {
+    const mode = document.querySelector('input[name="sendMode"]:checked').value;
+    const sendButton = document.getElementById('sendMessages');
+    const openAllButton = document.getElementById('openAllTabs');
+    
+    if (mode === 'instant') {
+        sendButton.textContent = '🚀 Buka Semua Tab Sekaligus';
+        openAllButton.style.display = 'none';
+    } else {
+        sendButton.textContent = '👆 Mulai Mode Manual';
+        openAllButton.style.display = 'inline-block';
+    }
+}
+
+function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    document.getElementById('fileInfo').innerHTML = `📄 File: <strong>${file.name}</strong> (${(file.size / 1024).toFixed(1)} KB)`;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            
+            if (jsonData.length > 0) {
+                headers = jsonData[0].map(h => String(h || '').trim()).filter(h => h);
+                excelData = jsonData.slice(1).map((row, index) => {
+                    const obj = { _rowIndex: index };
+                    headers.forEach((header, i) => {
+                        obj[header] = String(row[i] || '').trim();
+                    });
+                    return obj;
+                }).filter(row => {
+                    return Object.keys(row).some(key => key !== '_rowIndex' && row[key]);
+                });
+                
+                displayData();
+                updateVariables();
+                selectedRows = [];
+                updateSelectedCount();
+            }
+        } catch (error) {
+            alert('Error membaca file Excel: ' + error.message);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function displayData() {
+    const table = document.getElementById('dataTable');
+    const header = document.getElementById('tableHeader');
+    const body = document.getElementById('tableBody');
+    
+    header.innerHTML = '<tr><th><input type="checkbox" id="selectAllCheckbox" onchange="toggleAll(this)"></th>' + 
+                     headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+    
+    body.innerHTML = excelData.map((row, index) => 
+        `<tr>
+            <td class="checkbox-cell">
+                <input type="checkbox" id="checkbox-${index}" onchange="toggleRow(${index})" data-row="${index}">
+            </td>
+            ${headers.map(header => `<td>${row[header] || ''}</td>`).join('')}
+        </tr>`
+    ).join('');
+    
+    document.getElementById('dataContainer').style.display = 'block';
+    updateSelectedCount();
+}
+
+function toggleAll(checkbox) {
+    const rowCheckboxes = document.querySelectorAll('input[data-row]');
+    selectedRows = [];
+    
+    rowCheckboxes.forEach((cb, index) => {
+        cb.checked = checkbox.checked;
+        if (checkbox.checked) {
+            selectedRows.push(index);
+        }
+    });
+    
+    updateSelectedCount();
+    updateContactList();
+}
+
+function toggleRow(index) {
+    const checkbox = document.getElementById(`checkbox-${index}`);
+    
+    if (checkbox.checked) {
+        if (!selectedRows.includes(index)) {
+            selectedRows.push(index);
+        }
+    } else {
+        selectedRows = selectedRows.filter(i => i !== index);
+    }
+    
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    const totalCheckboxes = document.querySelectorAll('input[data-row]').length;
+    selectAllCheckbox.checked = selectedRows.length === totalCheckboxes;
+    selectAllCheckbox.indeterminate = selectedRows.length > 0 && selectedRows.length < totalCheckboxes;
+    
+    updateSelectedCount();
+    updateContactList();
+}
+
+function selectAll() {
+    selectedRows = excelData.map((_, index) => index);
+    document.querySelectorAll('input[data-row]').forEach((cb, index) => {
+        cb.checked = true;
+    });
+    const mainCheckbox = document.getElementById('selectAllCheckbox');
+    if (mainCheckbox) mainCheckbox.checked = true;
+    updateSelectedCount();
+    updateContactList();
+}
+
+function unselectAll() {
+    selectedRows = [];
+    document.querySelectorAll('input[data-row]').forEach(cb => {
+        cb.checked = false;
+    });
+    const mainCheckbox = document.getElementById('selectAllCheckbox');
+    if (mainCheckbox) mainCheckbox.checked = false;
+    updateSelectedCount();
+    updateContactList();
+}
+
+function updateSelectedCount() {
+    const count = selectedRows.length;
+    const total = excelData.length;
+    document.getElementById('selectedCount').textContent = `${count} dari ${total} kontak dipilih`;
+    
+    const sendButton = document.getElementById('sendMessages');
+    const openAllButton = document.getElementById('openAllTabs');
+    
+    if (count > 0 && document.getElementById('messageTemplate').value.trim()) {
+        sendButton.disabled = false;
+        openAllButton.disabled = false;
+    } else {
+        sendButton.disabled = true;
+        openAllButton.disabled = true;
+    }
+}
+
+function updateVariables() {
+    const variableContainer = document.getElementById('availableVariables');
+    variableContainer.innerHTML = headers.map(header => 
+        `<span class="variable-tag" onclick="insertVariable('${header}')">{${header}}</span>`
+    ).join('');
+}
+
+function insertVariable(variable) {
+    const textarea = document.getElementById('messageTemplate');
+    const cursorPos = textarea.selectionStart;
+    const textBefore = textarea.value.substring(0, cursorPos);
+    const textAfter = textarea.value.substring(textarea.selectionEnd);
+    
+    textarea.value = textBefore + `{${variable}}` + textAfter;
+    textarea.focus();
+    textarea.setSelectionRange(cursorPos + variable.length + 2, cursorPos + variable.length + 2);
+    
+    updatePreview();
+}
+
+function updatePreview() {
+    const template = document.getElementById('messageTemplate').value;
+    const previewDiv = document.getElementById('messagePreview');
+    
+    if (!template.trim()) {
+        previewDiv.textContent = 'Template akan muncul di sini...';
+        return;
+    }
+    
+    if (selectedRows.length === 0 || excelData.length === 0) {
+        previewDiv.textContent = 'Pilih kontak untuk melihat preview...';
+        return;
+    }
+    
+    // Gunakan data dari baris pertama yang dipilih untuk preview
+    const firstSelectedIndex = selectedRows[0];
+    const sampleData = excelData[firstSelectedIndex];
+    
+    let preview = template;
+    headers.forEach(header => {
+        const regex = new RegExp(`\\{${header}\\}`, 'g');
+        preview = preview.replace(regex, sampleData[header] || `{${header}}`);
+    });
+    
+    previewDiv.textContent = preview;
+    updateSelectedCount();
+}
+
+function updateContactList() {
+    if (selectedRows.length === 0) {
+        document.getElementById('contactListContainer').style.display = 'none';
+        return;
+    }
+    
+    document.getElementById('contactListContainer').style.display = 'block';
+    const contactList = document.getElementById('contactList');
+    
+    contactList.innerHTML = selectedRows.map((rowIndex, listIndex) => {
+        const contact = excelData[rowIndex];
+        const phoneField = findPhoneField(contact);
+        const nameField = findNameField(contact);
+        
+        return `
+            <div class="contact-item" data-index="${rowIndex}">
+                <div class="contact-info">
+                    <div class="contact-name">${contact[nameField] || `Kontak ${listIndex + 1}`}</div>
+                    <div class="contact-phone">${contact[phoneField] || 'No phone'}</div>
+                </div>
+                <button class="send-individual" onclick="sendToContact(${rowIndex})" id="btn-${rowIndex}">
+                    📱 Kirim
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+function findPhoneField(contact) {
+    const phoneFields = ['phone', 'no_hp', 'nomor_hp', 'telepon', 'whatsapp', 'wa', 'hp', 'mobile'];
+    for (let field of phoneFields) {
+        for (let key of Object.keys(contact)) {
+            if (key.toLowerCase().includes(field)) {
+                return key;
+            }
+        }
+    }
+    return headers[0]; // fallback ke kolom pertama
+}
+
+function findNameField(contact) {
+    const nameFields = ['name', 'nama', 'full_name', 'fullname', 'nama_lengkap'];
+    for (let field of nameFields) {
+        for (let key of Object.keys(contact)) {
+            if (key.toLowerCase().includes(field)) {
+                return key;
+            }
+        }
+    }
+    return headers[0]; // fallback ke kolom pertama
+}
+
+function processMessage(template, contact) {
+    let message = template;
+    headers.forEach(header => {
+        const regex = new RegExp(`\\{${header}\\}`, 'g');
+        message = message.replace(regex, contact[header] || '');
+    });
+    return message;
+}
+
+function formatPhoneNumber(phone) {
+    if (!phone) return '';
+    
+    // Hapus semua karakter non-digit
+    let cleanPhone = phone.replace(/\D/g, '');
+    
+    // Jika dimulai dengan 0, ganti dengan 62
+    if (cleanPhone.startsWith('0')) {
+        cleanPhone = '62' + cleanPhone.substring(1);
+    }
+    
+    // Jika tidak dimulai dengan 62, tambahkan 62
+    if (!cleanPhone.startsWith('62')) {
+        cleanPhone = '62' + cleanPhone;
+    }
+    
+    return cleanPhone;
+}
+
+function createWhatsAppURL(phone, message) {
+    const formattedPhone = formatPhoneNumber(phone);
+    const encodedMessage = encodeURIComponent(message);
+    return `https://wa.me/${formattedPhone}?text=${encodedMessage}`;
+}
+
+function sendToContact(rowIndex) {
+    const template = document.getElementById('messageTemplate').value;
+    if (!template.trim()) {
+        showStatus('Template pesan tidak boleh kosong!', 'error');
+        return;
+    }
+    
+    const contact = excelData[rowIndex];
+    const phoneField = findPhoneField(contact);
+    const phone = contact[phoneField];
+    
+    if (!phone) {
+        showStatus(`Nomor telepon tidak ditemukan untuk kontak pada baris ${rowIndex + 1}`, 'error');
+        return;
+    }
+    
+    const message = processMessage(template, contact);
+    const whatsappURL = createWhatsAppURL(phone, message);
+    
+    // Buka tab WhatsApp
+    window.open(whatsappURL, '_blank');
+    
+    // Update status tombol
+    const button = document.getElementById(`btn-${rowIndex}`);
+    button.textContent = '✅ Terkirim';
+    button.disabled = true;
+    button.style.background = '#28a745';
+    
+    if (!processedContacts.includes(rowIndex)) {
+        processedContacts.push(rowIndex);
+    }
+    
+    updateProgress();
+}
+
+function updateProgress() {
+    const total = selectedRows.length;
+    const completed = processedContacts.length;
+    const percentage = total > 0 ? (completed / total) * 100 : 0;
+    
+    document.getElementById('progressContainer').style.display = 'block';
+    document.getElementById('progressFill').style.width = percentage + '%';
+    document.getElementById('progressText').textContent = `${completed} dari ${total} pesan telah diproses (${percentage.toFixed(1)}%)`;
+    
+    if (completed === total && total > 0) {
+        showStatus(`🎉 Semua ${total} pesan telah berhasil diproses!`, 'success');
+    }
+}
+
+// Event listeners untuk tombol utama
+document.getElementById('sendMessages').addEventListener('click', function() {
+    const mode = document.querySelector('input[name="sendMode"]:checked').value;
+    
+    if (mode === 'instant') {
+        sendAllMessages();
+    } else {
+        startManualMode();
+    }
+});
+
+document.getElementById('openAllTabs').addEventListener('click', sendAllMessages);
+
+function sendAllMessages() {
+    const template = document.getElementById('messageTemplate').value;
+    if (!template.trim()) {
+        showStatus('Template pesan tidak boleh kosong!', 'error');
+        return;
+    }
+    
+    if (selectedRows.length === 0) {
+        showStatus('Pilih minimal satu kontak untuk dikirim!', 'warning');
+        return;
+    }
+    
+    if (selectedRows.length > 20) {
+        if (!confirm(`Anda akan membuka ${selectedRows.length} tab sekaligus. Ini mungkin akan membuat browser lambat. Lanjutkan?`)) {
+            return;
+        }
+    }
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    selectedRows.forEach((rowIndex, index) => {
+        setTimeout(() => {
+            try {
+                const contact = excelData[rowIndex];
+                const phoneField = findPhoneField(contact);
+                const phone = contact[phoneField];
+                
+                if (!phone) {
+                    errorCount++;
+                    return;
+                }
+                
+                const message = processMessage(template, contact);
+                const whatsappURL = createWhatsAppURL(phone, message);
+                
+                window.open(whatsappURL, '_blank');
+                successCount++;
+                
+                if (!processedContacts.includes(rowIndex)) {
+                    processedContacts.push(rowIndex);
+                }
+                
+                // Update button di contact list
+                const button = document.getElementById(`btn-${rowIndex}`);
+                if (button) {
+                    button.textContent = '✅ Terkirim';
+                    button.disabled = true;
+                    button.style.background = '#28a745';
+                }
+                
+            } catch (error) {
+                errorCount++;
+                console.error('Error sending to contact:', error);
+            }
+            
+            // Update progress setelah selesai semua
+            if (index === selectedRows.length - 1) {
+                setTimeout(() => {
+                    updateProgress();
+                    if (errorCount > 0) {
+                        showStatus(`⚠️ ${successCount} pesan berhasil dikirim, ${errorCount} gagal. Periksa nomor telepon yang tidak valid.`, 'warning');
+                    } else {
+                        showStatus(`🎉 Semua ${successCount} pesan berhasil dikirim ke WhatsApp!`, 'success');
+                    }
+                }, 500);
+            }
+        }, index * 500); // Delay 500ms antar tab untuk menghindari spam
+    });
+}
+
+function startManualMode() {
+    const template = document.getElementById('messageTemplate').value;
+    if (!template.trim()) {
+        showStatus('Template pesan tidak boleh kosong!', 'error');
+        return;
+    }
+    
+    if (selectedRows.length === 0) {
+        showStatus('Pilih minimal satu kontak untuk dikirim!', 'warning');
+        return;
+    }
+    
+    // Reset processed contacts
+    processedContacts = [];
+    
+    // Enable semua tombol individual dan update contact list
+    updateContactList();
+    
+    showStatus(`📋 Mode manual aktif. Klik tombol "📱 Kirim" pada setiap kontak untuk mengirim pesan.`, 'success');
+    
+    // Scroll ke contact list
+    document.getElementById('contactListContainer').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showStatus(message, type = 'success') {
+    const statusDiv = document.getElementById('sendStatus');
+    statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+    
+    // Auto hide setelah 5 detik untuk success dan warning
+    if (type === 'success' || type === 'warning') {
+        setTimeout(() => {
+            statusDiv.innerHTML = '';
+        }, 5000);
+    }
+}
+</script>
+</body>
+</html>
